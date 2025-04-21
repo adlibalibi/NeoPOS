@@ -24,7 +24,7 @@ const Checkout = () => {
         },
         body: JSON.stringify({
           product_name: productName,
-          amount: amount, // still in cents
+          amount: amount,
           quantity: quantity
         })
       });
