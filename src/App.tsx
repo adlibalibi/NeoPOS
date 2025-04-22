@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Checkout from "./pages/checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
+import Inventory from "./pages/Inventory";
 
 const queryClient = new QueryClient();
 
@@ -35,9 +36,10 @@ const App = () => (
               </ProtectedRoute>
             } 
           />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-portal" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-failed" element={<PaymentFailed />} />
+          <Route path="/inventory" element={<Inventory />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
