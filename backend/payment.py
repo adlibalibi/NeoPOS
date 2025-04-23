@@ -5,7 +5,7 @@ import traceback
 payment_bp = Blueprint("payment", __name__)
 stripe.api_key = "sk_test_51RGEMDBOOBO2A7HdDHByjGYxtBU1NbZhhDa7P4i97faWqtMORrHrudftKzkQ8vfDJINZBSUtSB0TjPxHFS9uRx5h00ngQwSL1O" # chari and anuhya add your secret keys here
 
-'''@payment_bp.route("/create-checkout-session", methods=["POST"])
+@payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     try:
         data = request.get_json()
@@ -32,12 +32,12 @@ def create_checkout_session():
     except Exception as e:
         print("Full error:")
         traceback.print_exc()
-        return jsonify(error=str(e)), 400'''
+        return jsonify(error=str(e)), 400
 
-@payment_bp.route("/create-checkout-session", methods=["POST"])
+'''@payment_bp.route("/create-checkout-session", methods=["POST"])
 def test_session():
     data = request.get_json()
     print("Test endpoint hit. Data:", data)
-    return jsonify({"message": "It works!", "data": data})
+    return jsonify({"message": "It works!", "data": data})'''
 
 
