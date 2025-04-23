@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 import traceback
 
 payment_bp = Blueprint("payment", __name__)
-stripe.api_key = "sk_test_51RGEMDBOOBO2A7HdDHByjGYxtBU1NbZhhDa7P4i97faWqtMORrHrudftKzkQ8vfDJINZBSUtSB0TjPxHFS9uRx5h00ngQwSL1O" # chari and anuhya add your secret keys here
+stripe.api_key = "<add secret key>" # chari and anuhya add your secret keys here
 
 @payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
