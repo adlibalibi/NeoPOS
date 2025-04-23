@@ -11,6 +11,7 @@ import Checkout from "./pages/Checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import Inventory from "./pages/Inventory";
+import UserProfile from "./pages/UserProfile";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/payment-failed" element={<PaymentFailed />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route path="/user-profile" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
