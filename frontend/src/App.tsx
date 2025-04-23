@@ -11,6 +11,7 @@ import Checkout from "./pages/checkout";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import Inventory from "./pages/Inventory";
+import UserProfile from "./pages/UserProfile"; 
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <UserProfile />
               </ProtectedRoute>
             } 
           />
