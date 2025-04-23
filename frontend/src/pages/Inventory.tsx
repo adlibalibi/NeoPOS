@@ -1,40 +1,34 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import Navbar from "@/components/Navbar";
-import InventoryTable from "@/components/inventory/InventoryTable";
-import AddEditItemDialog from "@/components/inventory/AddEditItemDialog";
-import { toast } from "@/hooks/use-toast";
+'use client';
 
-interface InventoryItem {
-  id: string;
+import { useState, useEffect } from 'react';
+import Navbar from '@/components/Navbar';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2 } from 'lucide-react';
+
+type InventoryItem = {
   name: string;
   price: number;
   stock: number;
-}
+};
 
-const Inventory = () => {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
+export default function Inventory() {
+  const [inventory, setInventory] = useState<Record<string, InventoryItem>>({});
+  const [loading, setLoading] = useState(false);
+  const [newItem, setNewItem] = useState({ id: '', name: '', price: '', stock: '' });
 
   const fetchInventory = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/inventory/all');
+      const response = await fetch('http://localhost:5050/inventory/all');
       const data = await response.json();
-      const formattedItems = Object.entries(data).map(([id, details]: [string, any]) => ({
-        id,
-        ...details,
-      }));
-      setItems(formattedItems);
+      setInventory(data);
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch inventory items",
-        variant: "destructive",
-      });
+      console.error('Error fetching inventory:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,66 +36,71 @@ const Inventory = () => {
     fetchInventory();
   }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleAddItem = async () => {
+    setLoading(true);
     try {
-      await fetch(`http://localhost:5000/inventory/delete/${id}`, {
-        method: 'DELETE',
+      const response = await fetch('http://localhost:5050/inventory/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: newItem.id,
+          name: newItem.name,
+          price: parseInt(newItem.price),
+          stock: parseInt(newItem.stock)
+        })
       });
-      toast({
-        title: "Success",
-        description: "Item deleted successfully",
-      });
-      fetchInventory();
+
+      if (response.ok) {
+        await fetchInventory();
+        setNewItem({ id: '', name: '', price: '', stock: '' });
+      } else {
+        alert('Failed to add item.');
+      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete item",
-        variant: "destructive",
-      });
+      console.error('Error adding item:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-[#1A1F2C]">Inventory Management</h1>
-          <Button
-            onClick={() => {
-              setEditingItem(null);
-              setIsDialogOpen(true);
-            }}
-            className="bg-[#9b87f5] hover:bg-[#7E69AB] text-white"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Button>
-        </div>
-        
-        <Card className="p-6">
-          <InventoryTable
-            items={items}
-            onEdit={(item) => {
-              setEditingItem(item);
-              setIsDialogOpen(true);
-            }}
-            onDelete={handleDelete}
-          />
+      <div className="container mx-auto px-4 py-12 max-w-3xl space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Add New Item</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input placeholder="Product ID" value={newItem.id} onChange={(e) => setNewItem({ ...newItem, id: e.target.value })} />
+            <Input placeholder="Name" value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
+            <Input placeholder="Price (in cents)" type="number" value={newItem.price} onChange={(e) => setNewItem({ ...newItem, price: e.target.value })} />
+            <Input placeholder="Stock" type="number" value={newItem.stock} onChange={(e) => setNewItem({ ...newItem, stock: e.target.value })} />
+            <Button onClick={handleAddItem} disabled={loading}>
+              {loading ? <Loader2 className="animate-spin h-4 w-4" /> : 'Add Item'}
+            </Button>
+          </CardContent>
         </Card>
 
-        <AddEditItemDialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          item={editingItem}
-          onSuccess={() => {
-            setIsDialogOpen(false);
-            fetchInventory();
-          }}
-        />
+        <Card>
+          <CardHeader>
+            <CardTitle>Inventory</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Object.entries(inventory).map(([id, item]) => (
+              <div key={id} className="border p-4 rounded shadow">
+                <p><strong>ID:</strong> {id}</p>
+                <p><strong>Name:</strong> {item.name}</p>
+                <p><strong>Price:</strong> ${(item.price / 100).toFixed(2)}</p>
+                <p><strong>Stock:</strong> {item.stock}</p>
+              </div>
+            ))}
+            {Object.keys(inventory).length === 0 && <p className="text-muted">No items in inventory.</p>}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
-};
-
-export default Inventory;
+}
