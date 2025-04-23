@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Navbar from '@/components/Navbar';
 
 interface UserProfileProps {
   
@@ -55,44 +56,7 @@ const UserProfile: React.FC<UserProfileProps> = () => {
 
   return (
     <div className="bg-[#f2f7fa] min-h-screen text-gray-800">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="#" className="flex items-center text-[#4f99ba] font-bold text-2xl">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="mr-2"
-            >
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
-            NeoPOS
-          </a>
-          <nav className="flex gap-6">
-            <a href="#" className="text-gray-600 font-medium hover:text-[#4f99ba]">
-              Dashboard
-            </a>
-            <a
-              href="#"
-              className="text-[#4f99ba] font-medium border-b-2 border-[#4f99ba]"
-            >
-              Profile
-            </a>
-            <a href="#" className="text-[#4f99ba] font-medium">
-              Logout
-            </a>
-          </nav>
-        </div>
-      </header>
-
+        <Navbar />
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

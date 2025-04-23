@@ -42,7 +42,7 @@ const App = () => (
           <Route path="/payment-failed" element={<PaymentFailed />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/user-profile" element={<UserProfile />} />
+          <Route path="/profile" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
