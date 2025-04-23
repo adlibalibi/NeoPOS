@@ -10,35 +10,47 @@ import { Loader2 } from 'lucide-react';
 
 const Checkout = () => {
   const [productName, setProductName] = useState("Test Product");
-  const [amount, setAmount] = useState(0);
+  const [amount, setAmount] = useState("");  
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
     setLoading(true);
+    const amountInCents = Math.round(Number(amount) * 100);  
+    if (isNaN(amountInCents) || amountInCents <= 0) {
+      alert("Please enter a valid amount.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch("http://localhost:5000/payment/create-checkout-session", {
+      const response = await fetch("http://localhost:5050/payment/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           product_name: productName,
-          amount: amount,
+          amount: amountInCents,  
           quantity: quantity
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const data = await response.json();
+      console.log("Response data:", data);  
 
       if (data.url) {
-        window.location.href = data.url;
+        window.location.href = data.url;  
       } else {
         alert("Failed to create checkout session.");
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      alert("An error occurred.");
+      alert(`An error occurred: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -66,10 +78,12 @@ const Checkout = () => {
               <Input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
+                onChange={(e) => setAmount(e.target.value)} 
                 placeholder="Amount in dollars"
               />
-              <p className="text-sm text-muted-foreground mt-1">${(amount / 100).toFixed(2)}</p>
+              {amount && (
+                <p className="text-sm text-muted-foreground mt-1">${(Number(amount) || 0).toFixed(2)}</p>
+              )}
             </div>
             <div>
               <Label>Quantity</Label>
