@@ -24,6 +24,5 @@ app.register_blueprint(billing_bp, url_prefix="/billing")
 app.register_blueprint(payment_bp, url_prefix="/payment")
 app.register_blueprint(users_bp, url_prefix="/users")
 
-# Run the app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5050, debug=True)
