@@ -50,3 +50,4 @@ coverage/
 
 # Static
 staticfiles/
+backend/fb_key.json
