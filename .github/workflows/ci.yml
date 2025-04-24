@@ -1,5 +1,5 @@
 name: CI
-
+# because CI won't commit without some changes, we can use this to trigger the workflow 
 on:
   push:
     branches: [main]
