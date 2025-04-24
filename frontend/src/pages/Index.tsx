@@ -11,7 +11,8 @@ const Index = () => {
     {
       icon: <ShoppingCart className="h-6 w-6 text-white" />,
       title: "Real-Time Inventory Tracking",
-      description: "NeoPOS automatically updates stock levels with every transaction, helping businesses prevent overstocking or stockouts while keeping inventory accurate and up-to-date at all times."
+      description: "NeoPOS automatically updates stock levels with every transaction, helping businesses prevent overstocking or stockouts while keeping inventory accurate and up-to-date at all times.",
+      onClick: () => navigate('/inventory')
     },
     {
       icon: <LineChart className="h-6 w-6 text-white" />,
@@ -77,6 +78,11 @@ const Index = () => {
                       {feature.title === "Integrated Payment Options" && (
                         <Button onClick={feature.onClick} className="mt-6">
                           Proceed to Checkout
+                        </Button>
+                      )}
+                      {feature.title === "Real-Time Inventory Tracking" && (
+                        <Button onClick={feature.onClick} className="mt-6">
+                          Manage Inventory
                         </Button>
                       )}
                     </div>

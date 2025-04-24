@@ -17,12 +17,23 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex-shrink-0 flex items-center gap-2">
-            <ShoppingCart className="h-6 w-6 text-primary" />
+            <div
+              className="flex-shrink-0 flex items-center gap-2 cursor-pointer"
+              onClick={() => navigate('/')}>
+              <ShoppingCart className="h-6 w-6 text-primary" />
             <h1 className="text-2xl font-bold text-primary">NeoPOS</h1>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate('/inventory')}
+                  className="text-gray-600 hover:text-primary"
+                >
+                  Inventory
+                </Button>
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/dashboard')}
