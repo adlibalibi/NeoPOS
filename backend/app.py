@@ -17,7 +17,7 @@ import os
 #db = firestore.client()
 
 app = Flask(__name__)
-#CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True)
 
 #app.register_blueprint(inventory_bp, url_prefix="/inventory")
 #app.register_blueprint(billing_bp, url_prefix="/billing")
