@@ -1,9 +1,10 @@
 import stripe
 from flask import Blueprint, request, jsonify
 import traceback
+import os
 
 payment_bp = Blueprint("payment", __name__)
-stripe.api_key = "<add secret key>" # chari and anuhya add your secret keys here
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 @payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
