@@ -13,16 +13,12 @@ def add_item():
         return jsonify({"error": "user_id and product_id required"}), 400
 
     try:
-        # Store item data with all fields provided
         item_data = {
-            "user_id": user_id,  # Track which user owns this item
+            "user_id": user_id, 
             "name": data.get("name"),
             "price": data.get("price"),
             "stock": data.get("stock")
         }
-
-        # Using a separate inventories collection to store all inventory items
-        # Each document has a unique ID (product_id) and stores user_id as a field
         doc_ref = db.collection("inventories").document(product_id)
         doc_ref.set(item_data)
 
@@ -40,19 +36,14 @@ def update_item(product_id):
         return jsonify({"error": "user_id required"}), 400
 
     try:
-        # Get the item document
         doc_ref = db.collection("inventories").document(product_id)
         doc = doc_ref.get()
 
         if not doc.exists:
             return jsonify({"error": "Item not found"}), 404
-
-        # Check if the item belongs to the user
         item_data = doc.to_dict()
         if item_data.get("user_id") != user_id:
             return jsonify({"error": "Not authorized to update this item"}), 403
-
-        # Update the item
         update_data = {}
         if "name" in data:
             update_data["name"] = data.get("name")
@@ -62,8 +53,6 @@ def update_item(product_id):
             update_data["stock"] = data.get("stock")
 
         doc_ref.update(update_data)
-        
-        # Get the updated document
         updated_doc = doc_ref.get()
         return jsonify({"message": "Item updated", "item": updated_doc.to_dict()})
     except Exception as e:
@@ -79,19 +68,15 @@ def delete_item(product_id):
         return jsonify({"error": "user_id required"}), 400
 
     try:
-        # Get the item document
         doc_ref = db.collection("inventories").document(product_id)
         doc = doc_ref.get()
 
         if not doc.exists:
             return jsonify({"error": "Item not found"}), 404
-
-        # Check if the item belongs to the user
         item_data = doc.to_dict()
         if item_data.get("user_id") != user_id:
             return jsonify({"error": "Not authorized to delete this item"}), 403
 
-        # Delete the item
         doc_ref.delete()
         return jsonify({"message": "Item deleted successfully"})
     except Exception as e:
@@ -106,7 +91,6 @@ def get_all_items():
         return jsonify({"error": "user_id required"}), 400
 
     try:
-        # Query all inventory items where user_id matches
         inventory_ref = db.collection("inventories").where("user_id", "==", user_id)
         docs = inventory_ref.stream()
 

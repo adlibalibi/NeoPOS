@@ -35,10 +35,4 @@ def create_checkout_session():
         traceback.print_exc()
         return jsonify(error=str(e)), 400
 
-'''@payment_bp.route("/create-checkout-session", methods=["POST"])
-def test_session():
-    data = request.get_json()
-    print("Test endpoint hit. Data:", data)
-    return jsonify({"message": "It works!", "data": data})'''
-
 

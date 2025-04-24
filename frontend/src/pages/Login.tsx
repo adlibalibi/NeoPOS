@@ -84,7 +84,7 @@ const Login = () => {
 
         const idToken = await user.getIdToken();
 
-        localStorage.setItem('token', idToken); // ✅ Store correct token
+        localStorage.setItem('token', idToken);
         localStorage.setItem('user', JSON.stringify({
           name: user.displayName,
           email: user.email,

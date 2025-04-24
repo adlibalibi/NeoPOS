@@ -180,7 +180,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Scrollable Chart with Gradient */}
+        {/*Chart*/}
         <Card className="border shadow-lg bg-white mb-8">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-gray-800">Inventory Stock Levels</CardTitle>
@@ -259,7 +259,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions Panel with Fixed Text Fitting */}
+        {/* Quick Actions Panel*/}
         <Card className="border shadow-lg bg-white">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-gray-800">Quick Actions</CardTitle>

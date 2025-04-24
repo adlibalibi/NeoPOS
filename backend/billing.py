@@ -7,7 +7,7 @@ db = firestore.client()
 @billing_bp.route("/create", methods=["POST"])
 def create_bill():
     data = request.json
-    items = data["items"]  # list of {"id": ..., "qty": ...}
+    items = data["items"] 
     user_id = data["user_id"]
     total = 0
     bill_items = []
@@ -36,8 +36,6 @@ def create_bill():
             "price": product["price"],
             "subtotal": cost
         })
-
-        # Update stock
         doc_ref.update({"stock": product["stock"] - qty})
 
     bill = {

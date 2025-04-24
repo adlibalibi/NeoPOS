@@ -11,7 +11,7 @@ def create_user():
     user_ref.set({
         "name": data["name"],
         "email": data["email"],
-        "password": data["password"],  # ideally hashed
+        "password": data["password"],
         "createdAt": firestore.SERVER_TIMESTAMP
     })
     return jsonify({"status": "success", "user_id": user_ref.id})

@@ -31,7 +31,6 @@ import {
   TableRow
 } from "@/components/ui/table";
 
-// Importing Navbar from components
 import Navbar from "@/components/Navbar"; 
 
 const Inventory = () => {
@@ -66,7 +65,6 @@ const Inventory = () => {
     try {
       const inventoryRef = collection(db, "users", userId, "inventory");
       
-      // Create a real-time listener for inventory changes
       const unsubscribe = onSnapshot(inventoryRef, (snapshot) => {
         const inventoryItems = snapshot.docs.map((doc) => ({ 
           id: doc.id, 
@@ -98,11 +96,8 @@ const Inventory = () => {
     
     setIsLoading(true);
     try {
-      // Ensure user document exists first
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, { email: user.email }, { merge: true });
-      
-      // Add the inventory item
       const inventoryRef = collection(db, "users", user.uid, "inventory");
       await addDoc(inventoryRef, {
         name: newItem.name,
@@ -172,7 +167,6 @@ const Inventory = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Using the Navbar component here */}
       <Navbar />
       
       <div className="max-w-5xl mx-auto p-4">
@@ -219,14 +213,12 @@ const Inventory = () => {
           </Dialog>
         </div>
 
-        {/* Status message display */}
         {statusMessage && (
           <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 mb-4">
             {statusMessage}
           </div>
         )}
 
-        {/* Edit item dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent>
             <DialogHeader>

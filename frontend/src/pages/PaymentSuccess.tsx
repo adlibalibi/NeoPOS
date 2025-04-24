@@ -9,7 +9,6 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // add analytics or logging here maybe?
     console.log('Payment successful');
   }, []);
 
