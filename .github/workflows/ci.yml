@@ -41,17 +41,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    #- name: Install backend dependencies
-    #  working-directory: backend
-    #  run: |
-    #    python -m pip install --upgrade pip
-    #    pip install -r requirements.txt
-
-    #- name: (Optional) Run backend tests
-    #  working-directory: backend
-    #  run: |
-    #    # Add test command here, e.g. pytest
-    #    echo "No backend tests configured"
+    - name: Install backend dependencies
+      working-directory: backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Done
-      run: echo "Frontend CI pipeline completed successfully!"
+      run: echo "CI pipeline completed successfully!"
