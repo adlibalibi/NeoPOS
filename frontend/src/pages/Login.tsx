@@ -36,7 +36,7 @@ const Login = () => {
     signInWithPopup(auth, provider)
       .then((result) => {
         const user = result.user;
-        console.log("✅ User Signed In:", user.displayName, user.email);
+        console.log(" User Signed In:", user.displayName, user.email);
         localStorage.setItem('token', user.accessToken || 'firebase-token');
         localStorage.setItem('user', JSON.stringify({
           name: user.displayName,
@@ -49,7 +49,7 @@ const Login = () => {
         navigate('/dashboard');
       })
       .catch((error) => {
-        console.error("❌ Sign-in error", error.message);
+        console.error(" Sign-in error", error.message);
         toast({
           title: "Login failed",
           description: error.message,
