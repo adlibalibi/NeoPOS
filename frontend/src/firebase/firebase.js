@@ -8,7 +8,7 @@ const firebaseConfig = {
   storageBucket: "neopos--auth.firebasestorage.app",
   messagingSenderId: "229092865466",
   appId: "1:229092865466:web:7e09a0d004002b1c7fd983",
-  measurementId: "G-4ZT6MGR7KZ"
+  measurementId: "G-4ZT6MGR7KZ" //only use if you have analytics enabled
 };
 
 const app = initializeApp(firebaseConfig);
