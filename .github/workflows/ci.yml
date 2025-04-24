@@ -30,11 +30,11 @@ jobs:
         node-version: '18'
 
     - name: Install frontend dependencies
-      working-directory: NeoPOS/frontend
+      working-directory: frontend
       run: npm install
 
     - name: Build frontend
-      working-directory: NeoPOS/frontend
+      working-directory: frontend
       run: npm run build
 
     - name: Set up Python
@@ -42,17 +42,17 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Install backend dependencies
-      working-directory: NeoPOS/backend
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+    #- name: Install backend dependencies
+    #  working-directory: backend
+    #  run: |
+    #    python -m pip install --upgrade pip
+    #    pip install -r requirements.txt
 
-    - name: (Optional) Run backend tests
-      working-directory: NeoPOS/backend
-      run: |
-        # Add test command here, e.g. pytest
-        echo "No backend tests configured"
+    #- name: (Optional) Run backend tests
+    #  working-directory: backend
+    #  run: |
+    #    # Add test command here, e.g. pytest
+    #    echo "No backend tests configured"
 
     - name: Done
-      run: echo "CI pipeline completed successfully!"
+      run: echo "Frontend CI pipeline completed successfully!"
