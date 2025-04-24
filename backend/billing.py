@@ -1,12 +1,14 @@
 from flask import Blueprint, request, jsonify
-from inventory import inventory
+from firebase_admin import firestore
 
 billing_bp = Blueprint("billing", __name__)
-bills = []  # Stores all bill records
+db = firestore.client()
 
 @billing_bp.route("/create", methods=["POST"])
 def create_bill():
-    items = request.json["items"]  # list of {"id": ..., "qty": ...}
+    data = request.json
+    items = data["items"]  # list of {"id": ..., "qty": ...}
+    user_id = data["user_id"]
     total = 0
     bill_items = []
 
@@ -14,16 +16,20 @@ def create_bill():
         product_id = item["id"]
         qty = item["qty"]
 
-        if product_id not in inventory:
+        doc_ref = db.collection("users").document(user_id).collection("inventory").document(product_id)
+        product_doc = doc_ref.get()
+
+        if not product_doc.exists:
             return jsonify({"error": f"Product {product_id} not found"}), 404
 
-        product = inventory[product_id]
+        product = product_doc.to_dict()
 
         if product["stock"] < qty:
             return jsonify({"error": f"Insufficient stock for {product['name']}"}), 400
 
         cost = qty * product["price"]
         total += cost
+
         bill_items.append({
             "name": product["name"],
             "qty": qty,
@@ -31,11 +37,12 @@ def create_bill():
             "subtotal": cost
         })
 
-        inventory[product_id]["stock"] -= qty
+        # Update stock
+        doc_ref.update({"stock": product["stock"] - qty})
 
     bill = {
         "items": bill_items,
         "total": total
     }
-    bills.append(bill)
+
     return jsonify({"message": "Bill created", "bill": bill})
