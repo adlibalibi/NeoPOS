@@ -1,1 +1,7 @@
 Flask==2.2.5
+firebase-admin
+gunicorn
+requests
+stripe
+flask_cors
+
