@@ -1,150 +1,295 @@
-
-import { useState, useEffect } from 'react';
-import Navbar from '@/components/Navbar';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line, ResponsiveContainer } from 'recharts';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ShoppingCart, TrendingUp, Users, DollarSign, ArrowDown } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/firebase/firebase";
+import { collection, getDocs, DocumentData } from "firebase/firestore";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription
+} from "@/components/ui/card";
+import { PlusCircle, ShoppingCart, DollarSign, BarChart, CreditCard } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
+import { Link } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend
+} from "recharts";
+
+interface InventoryItem {
+  id: string;
+  name: string;
+  stock: number;
+  price: number;
+}
 
 const Dashboard = () => {
-  const [salesData, setSalesData] = useState<any[]>([]);
-  const [metrics, setMetrics] = useState({
-    dailySales: 0,
-    totalCustomers: 0,
-    averageOrder: 0,
-    revenue: 0
+  const [user, setUser] = useState(null);
+  const [inventoryStats, setInventoryStats] = useState({
+    totalItems: 0,
+    totalStock: 0,
+    totalValue: 0
   });
-
-  // Generate random transactions with INR
-  const recentTransactions = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1,
-    customer: `Customer ${i + 1}`,
-    amount: Math.floor(Math.random() * 100000) + 10000, // Larger numbers for INR
-    status: Math.random() > 0.3 ? 'completed' : 'pending',
-    date: new Date(Date.now() - Math.random() * 86400000).toLocaleString()
-  }));
+  const [chartData, setChartData] = useState<InventoryItem[]>([]);
 
   useEffect(() => {
-    // Generate random sales data
-    const data = Array.from({ length: 7 }, (_, i) => ({
-      day: new Date(Date.now() - (6 - i) * 86400000).toLocaleDateString('en-US', { weekday: 'short' }),
-      sales: Math.floor(Math.random() * 100000) + 50000 // Larger numbers for INR
-    }));
-    setSalesData(data);
-
-    // Generate random metrics with INR values
-    setMetrics({
-      dailySales: Math.floor(Math.random() * 1000) + 500,
-      totalCustomers: Math.floor(Math.random() * 1000) + 500,
-      averageOrder: Math.floor(Math.random() * 20000) + 5000,
-      revenue: Math.floor(Math.random() * 1000000) + 500000
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        fetchInventoryStats(currentUser.uid);
+      } else {
+        setUser(null);
+        setInventoryStats({
+          totalItems: 0,
+          totalStock: 0,
+          totalValue: 0
+        });
+        setChartData([]);
+      }
     });
+
+    return () => unsubscribe();
   }, []);
 
-  const cards = [
-    { title: 'Daily Sales', value: metrics.dailySales, icon: ShoppingCart, color: 'text-blue-600' },
-    { title: 'Total Customers', value: metrics.totalCustomers, icon: Users, color: 'text-green-600' },
-    { title: 'Average Order', value: `₹${metrics.averageOrder.toLocaleString('en-IN')}`, icon: TrendingUp, color: 'text-yellow-600' },
-    { title: 'Revenue', value: `₹${metrics.revenue.toLocaleString('en-IN')}`, icon: DollarSign, color: 'text-purple-600' }
-  ];
+  const fetchInventoryStats = async (userId: string) => {
+    try {
+      const inventoryRef = collection(db, "users", userId, "inventory");
+      const inventorySnap = await getDocs(inventoryRef);
+
+      let totalItems = 0;
+      let totalStock = 0;
+      let totalValue = 0;
+      const chartList: InventoryItem[] = [];
+
+      inventorySnap.forEach((doc) => {
+        const data = doc.data() as DocumentData;
+        totalItems++;
+        totalStock += data.stock;
+        totalValue += data.stock * data.price;
+        chartList.push({
+          id: doc.id,
+          name: data.name,
+          stock: data.stock,
+          price: data.price
+        });
+      });
+
+      setInventoryStats({ totalItems, totalStock, totalValue });
+      setChartData(chartList);
+    } catch (error) {
+      console.error("Error fetching inventory data:", error);
+    }
+  };
+
+  const handleReportDownload = () => {
+    if (chartData.length === 0) return;
+
+    const csvRows = [
+      ["Item Name", "Stock", "Price", "Total Value"],
+      ...chartData.map((item) => [
+        item.name,
+        item.stock,
+        item.price,
+        item.stock * item.price
+      ])
+    ];
+
+    const csvContent = csvRows.map((e) => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "inventory_report.csv";
+    link.click();
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Select defaultValue="current-week">
-            <SelectTrigger className="w-[240px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="current-week">Apr 21 - Apr 27, 2025</SelectItem>
-              <SelectItem value="prev-week">Apr 14 - Apr 20, 2025</SelectItem>
-              <SelectItem value="two-weeks-ago">Apr 07 - Apr 13, 2025</SelectItem>
-              <SelectItem value="three-weeks-ago">Mar 31 - Apr 06, 2025</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {cards.map((card, index) => (
-            <Card key={index}>
-              <CardContent className="flex items-center p-6">
-                <div className={`rounded-full p-3 ${card.color} bg-opacity-10 mr-4`}>
-                  <card.icon className={`h-6 w-6 ${card.color}`} />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <h3 className="text-2xl font-bold">{card.value}</h3>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="max-w-7xl mx-auto p-6">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard Overview</h1>
+          <div className="flex gap-4">
+            <Button 
+              variant="outline" 
+              onClick={handleReportDownload}
+              className="bg-white hover:bg-gray-100 border border-gray-200 shadow-sm transition-all"
+            >
+              <BarChart className="w-4 h-4 mr-2 text-blue-600" /> Export Report
+            </Button>
+            <Link to="/checkout">
+              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition-all">
+                <CreditCard className="w-4 h-4 mr-2" /> Payments
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        {/* Sales Chart */}
-        <Card className="mb-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-green-900">Total Items</CardTitle>
+              <CardDescription className="text-green-700">The total number of items in your inventory</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-5xl font-bold text-green-800">{inventoryStats.totalItems}</div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <PlusCircle className="w-8 h-8 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-amber-900">Total Stock</CardTitle>
+              <CardDescription className="text-amber-700">Total quantity across all items</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-5xl font-bold text-amber-800">{inventoryStats.totalStock}</div>
+                <div className="p-3 bg-amber-100 rounded-full">
+                  <ShoppingCart className="w-8 h-8 text-amber-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-blue-900">Total Value</CardTitle>
+              <CardDescription className="text-blue-700">Value of all inventory items</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-5xl font-bold text-blue-800">₹{inventoryStats.totalValue.toFixed(2)}</div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <DollarSign className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Scrollable Chart with Gradient */}
+        <Card className="border shadow-lg bg-white mb-8">
           <CardHeader>
-            <CardTitle>Weekly Sales</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800">Inventory Stock Levels</CardTitle>
+            <CardDescription className="text-gray-600">Track how much stock is available for each item</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="day" />
-                  <YAxis tickFormatter={(value) => `₹${(value/1000)}K`} />
-                  <Tooltip formatter={(value) => [`₹${value.toLocaleString('en-IN')}`, 'Sales']} />
-                  <Line type="monotone" dataKey="sales" stroke="#8884d8" />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="h-96 overflow-x-auto">
+              <div className="min-w-full" style={{ minWidth: Math.max(chartData.length * 100, 1000) + 'px', height: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fill: '#666', fontSize: 14 }}
+                      tickLine={{ stroke: '#ccc' }}
+                      axisLine={{ stroke: '#ccc' }}
+                    />
+                    <YAxis 
+                      tick={{ fill: '#666', fontSize: 14 }}
+                      tickLine={{ stroke: '#ccc' }}
+                      axisLine={{ stroke: '#ccc' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                        border: 'none', 
+                        borderRadius: '8px', 
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        padding: '12px'
+                      }} 
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '8px' }}
+                    />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36} 
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: '10px' }}
+                    />
+                    <defs>
+                      <linearGradient id="stockGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#8884d8" stopOpacity={0.2} />
+                      </linearGradient>
+                      <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
+                    <Line 
+                      type="monotone" 
+                      dataKey="stock" 
+                      name="Stock Quantity"
+                      stroke="url(#stockGradient)" 
+                      strokeWidth={3} 
+                      dot={{ r: 6, stroke: '#8884d8', strokeWidth: 2, fill: 'white' }} 
+                      activeDot={{ r: 8, stroke: '#8884d8', strokeWidth: 2, fill: '#8884d8' }}
+                      animationDuration={1500}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="price" 
+                      name="Price (₹)"
+                      stroke="url(#priceGradient)" 
+                      strokeWidth={3} 
+                      dot={{ r: 6, stroke: '#82ca9d', strokeWidth: 2, fill: 'white' }} 
+                      activeDot={{ r: 8, stroke: '#82ca9d', strokeWidth: 2, fill: '#82ca9d' }}
+                      animationDuration={1500}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="text-center mt-4 text-gray-500 font-medium">
+              <span>Scroll horizontally to view all items →</span>
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Transactions */}
-        <Card>
+        {/* Quick Actions Panel with Fixed Text Fitting */}
+        <Card className="border shadow-lg bg-white">
           <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
+            <CardTitle className="text-xl font-bold text-gray-800">Quick Actions</CardTitle>
+            <CardDescription className="text-gray-600">Perform common actions quickly</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>{transaction.customer}</TableCell>
-                    <TableCell>₹{transaction.amount.toLocaleString('en-IN')}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        transaction.status === 'completed' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {transaction.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>{transaction.date}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <Link to="/inventory" className="w-full">
+                <Button variant="outline" className="w-full h-20 px-2 flex flex-col items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all">
+                  <PlusCircle className="w-6 h-6 mb-1 text-indigo-600" />
+                  <span className="text-sm font-medium">Add Item</span>
+                </Button>
+              </Link>
+              <Link to="/inventory" className="w-full">
+                <Button variant="outline" className="w-full h-20 px-2 flex flex-col items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all">
+                  <ShoppingCart className="w-6 h-6 mb-1 text-amber-600" />
+                  <span className="text-sm font-medium">View Inventory</span>
+                </Button>
+              </Link>
+              <Link to="/checkout" className="w-full">
+                <Button variant="outline" className="w-full h-20 px-2 flex flex-col items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all">
+                  <CreditCard className="w-6 h-6 mb-1 text-blue-600" />
+                  <span className="text-sm font-medium">Payments</span>
+                </Button>
+              </Link>
+              <Button onClick={handleReportDownload} variant="outline" className="w-full h-20 px-2 flex flex-col items-center justify-center bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all">
+                <BarChart className="w-6 h-6 mb-1 text-green-600" />
+                <span className="text-sm font-medium">Download Report</span>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -153,4 +298,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
