@@ -1,10 +1,11 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "@/firebase/firebase"; // adjust this path based on your setup
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login - in real app, this would be an API call
     if (credentials.email && credentials.password) {
       localStorage.setItem('token', 'mock-jwt-token');
       localStorage.setItem('user', JSON.stringify({
@@ -30,6 +30,31 @@ const Login = () => {
       });
       navigate('/dashboard');
     }
+  };
+
+  const signInWithGoogle = () => {
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const user = result.user;
+        console.log("✅ User Signed In:", user.displayName, user.email);
+        localStorage.setItem('token', user.accessToken || 'firebase-token');
+        localStorage.setItem('user', JSON.stringify({
+          name: user.displayName,
+          email: user.email,
+        }));
+        toast({
+          title: "Google Sign-In Success",
+          description: `Welcome, ${user.displayName}`,
+        });
+        navigate('/dashboard');
+      })
+      .catch((error) => {
+        console.error("❌ Sign-in error", error.message);
+        toast({
+          title: "Login failed",
+          description: error.message,
+        });
+      });
   };
 
   return (
@@ -66,6 +91,15 @@ const Login = () => {
               Sign in
             </Button>
           </form>
+
+          <div className="mt-4 text-center">
+            <Button
+              onClick={signInWithGoogle}
+              className="w-full bg-red-500 text-white hover:bg-red-600"
+            >
+              Login with Google
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
