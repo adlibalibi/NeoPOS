@@ -24,7 +24,7 @@ const Checkout = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5050/payment/create-checkout-session", {
+      const response = await fetch("https://neopos-1.onrender.com/payment/create-checkout-session", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
