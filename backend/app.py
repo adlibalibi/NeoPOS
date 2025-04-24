@@ -4,20 +4,20 @@ from billing import billing_bp
 from users import users_bp
 from payment import payment_bp
 from flask_cors import CORS
-import firebase_admin
+#import firebase_admin
 import os
-from firebase_admin import credentials, firestore
+#from firebase_admin import credentials, firestore
 
-cred_path = os.path.join(os.path.dirname(__file__), 'fb_key.json')
+#cred_path = os.path.join(os.path.dirname(__file__), 'fb_key.json')
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred)
+#if not firebase_admin._apps:
+ #   cred = credentials.Certificate(cred_path)
+  #  firebase_admin.initialize_app(cred)
 
-db = firestore.client()
+#db = firestore.client()
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)
+#CORS(app, supports_credentials=True)
 
 app.register_blueprint(inventory_bp, url_prefix="/inventory")
 app.register_blueprint(billing_bp, url_prefix="/billing")
