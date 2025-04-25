@@ -36,7 +36,6 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       <Navbar />
       
-      {/* Hero Section */}
       <div className="relative overflow-hidden bg-primary-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
@@ -51,7 +50,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Features Section */}
       <div className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">

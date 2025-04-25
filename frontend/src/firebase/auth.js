@@ -1,5 +1,5 @@
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "./firebase"; // the file you created
+import { auth, provider } from "./firebase"; 
 
 function signIn() {
   signInWithPopup(auth, provider)

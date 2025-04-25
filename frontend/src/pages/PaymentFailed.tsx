@@ -10,7 +10,6 @@ const PaymentFailed = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // add error logging here but eh not rn
     console.log('Payment failed');
   }, []);
 

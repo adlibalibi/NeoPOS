@@ -11,14 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      #STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-      FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-      FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+      VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+      VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+      VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+      VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+      VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+      VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
 
     steps:
     - name: Checkout repo
@@ -42,17 +41,11 @@ jobs:
       with:
         python-version: '3.11'
 
-    #- name: Install backend dependencies
-    #  working-directory: backend
-    #  run: |
-    #    python -m pip install --upgrade pip
-    #    pip install -r requirements.txt
-
-    #- name: (Optional) Run backend tests
-    #  working-directory: backend
-    #  run: |
-    #    # Add test command here, e.g. pytest
-    #    echo "No backend tests configured"
+    - name: Install backend dependencies
+      working-directory: backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: Done
-      run: echo "Frontend CI pipeline completed successfully!"
+      run: echo "CI pipeline completed successfully!"

@@ -22,7 +22,6 @@ const UserProfile: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Monitor auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -36,7 +35,6 @@ const UserProfile: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  // Fetch user data when userId is available
   useEffect(() => {
     const fetchUser = async () => {
       if (!userId) return;
@@ -50,7 +48,6 @@ const UserProfile: React.FC = () => {
           setUserData(data);
           setProfileImage(data.photoURL || null);
         } else {
-          // Create a default profile if none exists
           const defaultProfile = {
             name: auth.currentUser?.displayName || '',
             email: auth.currentUser?.email || '',
@@ -85,21 +82,17 @@ const UserProfile: React.FC = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.includes('image/')) {
         showNotification('Please select an image file', 'error');
         return;
       }
       
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         showNotification('Image size should be less than 5MB', 'error');
         return;
       }
       
       setImageFile(file);
-      
-      // Create preview URL
       const reader = new FileReader();
       reader.onload = () => {
         setPreviewUrl(reader.result as string);
@@ -115,31 +108,26 @@ const UserProfile: React.FC = () => {
     setUploadProgress(0);
     
     try {
-      // Create a storage reference with a unique name
       const fileExtension = imageFile.name.split('.').pop();
       const fileName = `profile-${Date.now()}.${fileExtension}`;
       const storageRef = ref(storage, `users/${userId}/${fileName}`);
       
-      // Upload file with progress monitoring
       const uploadTask = uploadBytesResumable(storageRef, imageFile);
       
       return new Promise<string>((resolve, reject) => {
         uploadTask.on(
           'state_changed',
           (snapshot) => {
-            // Track upload progress
             const progress = Math.round(
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100
             );
             setUploadProgress(progress);
           },
           (error) => {
-            // Handle errors
             console.error("Upload failed:", error);
             reject(error);
           },
           async () => {
-            // Upload completed successfully
             try {
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
               resolve(downloadURL);
@@ -168,8 +156,6 @@ const UserProfile: React.FC = () => {
 
     try {
       let photoURL = profileImage;
-
-      // Upload image if there's a new one
       if (imageFile) {
         try {
           photoURL = await uploadProfileImage();
@@ -183,11 +169,7 @@ const UserProfile: React.FC = () => {
           return;
         }
       }
-
-      // Update user data with new image URL
       const updatedUser = { ...userData, photoURL };
-
-      // Save to Firestore
       await setDoc(doc(db, 'users', userId), updatedUser);
       setUserData(updatedUser);
       setIsEditing(false);
@@ -239,8 +221,6 @@ const UserProfile: React.FC = () => {
   return (
     <div className="bg-[#f2f7fa] min-h-screen text-gray-800 relative">
       <Navbar />
-      
-      {/* Notification popup */}
       {showPopup && (
         <div className={`fixed top-6 right-6 px-6 py-3 rounded-md shadow-lg z-50 transition-all duration-300 ${
           popupType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
@@ -264,7 +244,6 @@ const UserProfile: React.FC = () => {
         <h1 className="text-3xl font-bold mb-8 text-[#2d5d7b]">Your Profile</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Profile Image Sidebar */}
           <div className="md:col-span-1">
             <div className="bg-white rounded-xl shadow-sm p-8">
               <div className="text-center">
@@ -377,14 +356,12 @@ const UserProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* Profile Form */}
           <div className="md:col-span-2">
             <div className="bg-white rounded-xl shadow-sm p-8">
               <form onSubmit={(e) => {
                 e.preventDefault();
                 handleSave(e);
               }}>
-                {/* Personal Info Section */}
                 <section className="mb-8">
                   <h3 className="text-xl font-semibold mb-6 flex items-center text-[#2d5d7b]">
                     <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -451,7 +428,6 @@ const UserProfile: React.FC = () => {
                   </div>
                 </section>
 
-                {/* Preferences Section */}
                 <section>
                   <h3 className="text-xl font-semibold mb-6 flex items-center text-[#2d5d7b]">
                     <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

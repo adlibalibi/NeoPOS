@@ -1,9 +1,10 @@
 import stripe
 from flask import Blueprint, request, jsonify
 import traceback
+import os
 
 payment_bp = Blueprint("payment", __name__)
-stripe.api_key = "<add secret key>" # chari and anuhya add your secret keys here
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 @payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
@@ -33,11 +34,5 @@ def create_checkout_session():
         print("Full error:")
         traceback.print_exc()
         return jsonify(error=str(e)), 400
-
-'''@payment_bp.route("/create-checkout-session", methods=["POST"])
-def test_session():
-    data = request.get_json()
-    print("Test endpoint hit. Data:", data)
-    return jsonify({"message": "It works!", "data": data})'''
 
 

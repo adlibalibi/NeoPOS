@@ -26,11 +26,9 @@ const Signup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
       const user = userCredential.user;
   
-      // Save extra profile details in Firestore
       await setDoc(doc(db, "users", user.uid), {
         name: form.name,
         email: form.email,
