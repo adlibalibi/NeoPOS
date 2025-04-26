@@ -1,16 +1,49 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
+import { Loader2 } from 'lucide-react'; // Spinner icon
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Payment successful');
-  }, []);
+    const verifyPayment = async () => {
+      const sessionId = searchParams.get('session_id');
+      if (!sessionId) {
+        console.error('No session ID found');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const res = await fetch(`https://neopos-1.onrender.com/payment/session/${sessionId}`);
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Payment verification failed');
+        }
+        console.log('Payment verified and stock updated');
+      } catch (error) {
+        console.error('Error verifying payment:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyPayment();
+  }, [searchParams]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loader2 className="h-12 w-12 animate-spin text-[#9b87f5]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

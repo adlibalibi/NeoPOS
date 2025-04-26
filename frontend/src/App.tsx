@@ -39,8 +39,8 @@ const App = () => (
             } 
           />
           <Route path="/payment-portal" element={<Checkout />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/payment-failed" element={<PaymentFailed />} />
+          <Route path="/success" element={<PaymentSuccess />} />
+          <Route path="/failed" element={<PaymentFailed />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/profile" element={<UserProfile />} />
