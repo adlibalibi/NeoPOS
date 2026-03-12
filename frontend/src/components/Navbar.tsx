@@ -6,9 +6,12 @@ import { ShoppingCart } from "lucide-react";
 const Navbar = () => {
   const navigate = useNavigate();
   const isLoggedIn = localStorage.getItem('token');
+  const rawUser = localStorage.getItem("user");
+  const role = rawUser ? (JSON.parse(rawUser)?.role as string | undefined) : undefined;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -27,20 +30,31 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {isLoggedIn ? (
               <>
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate('/inventory')}
-                  className="text-gray-600 hover:text-primary"
-                >
-                  Inventory
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate('/dashboard')}
-                  className="text-gray-600 hover:text-primary"
-                >
-                  Dashboard
-                </Button>
+                {(role === "admin" || role === "staff") && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/inventory')}
+                      className="text-gray-600 hover:text-primary"
+                    >
+                      Inventory
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/dashboard')}
+                      className="text-gray-600 hover:text-primary"
+                    >
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => navigate('/checkout')}
+                      className="text-gray-600 hover:text-primary"
+                    >
+                      Checkout
+                    </Button>
+                  </>
+                )}
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/transactions')}

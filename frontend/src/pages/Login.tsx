@@ -34,6 +34,10 @@ const Login = () => {
         const userSnap = await getDoc(userRef);
   
         const profile = userSnap.exists() ? userSnap.data() : {};
+        const role = profile.role || "admin";
+        if (userSnap.exists() && !profile.role) {
+          await setDoc(userRef, { role }, { merge: true });
+        }
   
         const idToken = await user.getIdToken();
   
@@ -43,6 +47,7 @@ const Login = () => {
           JSON.stringify({
             name: profile.name || user.displayName || "User",
             email: user.email,
+            role,
           })
         );
   
@@ -79,8 +84,11 @@ const Login = () => {
             name: user.displayName,
             email: user.email,
             createdAt: new Date().toISOString(),
+            role: "admin",
           });
         }
+
+        const role = userSnap.exists() ? (userSnap.data()?.role || "admin") : "admin";
 
         const idToken = await user.getIdToken();
 
@@ -88,6 +96,7 @@ const Login = () => {
         localStorage.setItem('user', JSON.stringify({
           name: user.displayName,
           email: user.email,
+          role,
         }));
 
         toast({

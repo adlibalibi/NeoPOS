@@ -22,6 +22,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+const RoleRoute = ({
+  children,
+  allow,
+}: {
+  children: React.ReactNode;
+  allow: Array<"admin" | "staff" | "customer">;
+}) => {
+  const raw = localStorage.getItem("user");
+  const role = raw ? (JSON.parse(raw)?.role as string | undefined) : undefined;
+  if (!role || !allow.includes(role as any)) return <Navigate to="/dashboard" />;
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,15 +48,44 @@ const App = () => (
             path="/dashboard" 
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <RoleRoute allow={["admin", "staff"]}>
+                  <Dashboard />
+                </RoleRoute>
               </ProtectedRoute>
             } 
           />
-          <Route path="/payment-portal" element={<Checkout />} />
+          <Route 
+            path="/payment-portal"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allow={["admin", "staff"]}>
+                  <Checkout />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/success" element={<PaymentSuccess />} />
           <Route path="/failed" element={<PaymentFailed />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route 
+            path="/inventory"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allow={["admin", "staff"]}>
+                  <Inventory />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <RoleRoute allow={["admin", "staff"]}>
+                  <Checkout />
+                </RoleRoute>
+              </ProtectedRoute>
+            }
+          />
           <Route 
             path="/transactions" 
             element={

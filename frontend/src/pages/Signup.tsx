@@ -13,6 +13,7 @@ const Signup = () => {
     email: '',
     phone: '',
     password: '',
+    role: 'admin',
     language: 'en',
     timezone: 'ist',
     dateFormat: 'dmy',
@@ -33,6 +34,7 @@ const Signup = () => {
         name: form.name,
         email: form.email,
         phone: form.phone,
+        role: form.role,
         language: form.language,
         timezone: form.timezone,
         dateFormat: form.dateFormat,
@@ -60,6 +62,12 @@ const Signup = () => {
           className="w-full mb-4 p-3 border rounded" />
         <input id="password" type="password" placeholder="Password" value={form.password} onChange={handleChange}
           required className="w-full mb-4 p-3 border rounded" />
+
+        <select id="role" value={form.role} onChange={handleChange} className="w-full mb-4 p-3 border rounded">
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
+          <option value="customer">Customer</option>
+        </select>
 
         <select id="language" value={form.language} onChange={handleChange} className="w-full mb-4 p-3 border rounded">
           <option value="en">English</option>
