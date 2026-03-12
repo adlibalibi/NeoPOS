@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/firebase/firebase";
-import { collection, getDocs, DocumentData } from "firebase/firestore";
+import { collection, getDocs, DocumentData, query, where, Timestamp } from "firebase/firestore";
 import {
   Card,
   CardContent,
@@ -31,6 +31,12 @@ interface InventoryItem {
   price: number;
 }
 
+interface Transaction {
+  id: string;
+  createdAt?: Timestamp;
+  amountTotal?: number; // stored in minor units (e.g. paise) from Stripe session
+}
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [inventoryStats, setInventoryStats] = useState({
@@ -39,12 +45,21 @@ const Dashboard = () => {
     totalValue: 0
   });
   const [chartData, setChartData] = useState<InventoryItem[]>([]);
+  const [salesStats, setSalesStats] = useState({
+    ordersToday: 0,
+    revenueToday: 0,
+    ordersThisWeek: 0,
+    revenueThisWeek: 0,
+    ordersThisMonth: 0,
+    revenueThisMonth: 0,
+  });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         fetchInventoryStats(currentUser.uid);
+        fetchSalesStats(currentUser.uid);
       } else {
         setUser(null);
         setInventoryStats({
@@ -53,6 +68,14 @@ const Dashboard = () => {
           totalValue: 0
         });
         setChartData([]);
+        setSalesStats({
+          ordersToday: 0,
+          revenueToday: 0,
+          ordersThisWeek: 0,
+          revenueThisWeek: 0,
+          ordersThisMonth: 0,
+          revenueThisMonth: 0,
+        });
       }
     });
 
@@ -86,6 +109,60 @@ const Dashboard = () => {
       setChartData(chartList);
     } catch (error) {
       console.error("Error fetching inventory data:", error);
+    }
+  };
+
+  const fetchSalesStats = async (userId: string) => {
+    try {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfWeek = new Date(startOfDay);
+      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday-start week
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const txRef = collection(db, "users", userId, "transactions");
+      const monthQuery = query(txRef, where("createdAt", ">=", Timestamp.fromDate(startOfMonth)));
+      const snap = await getDocs(monthQuery);
+
+      let ordersToday = 0;
+      let revenueToday = 0;
+      let ordersThisWeek = 0;
+      let revenueThisWeek = 0;
+      let ordersThisMonth = 0;
+      let revenueThisMonth = 0;
+
+      snap.forEach((doc) => {
+        const data = doc.data() as Transaction;
+        const createdAt = data.createdAt?.toDate?.();
+        if (!createdAt) return;
+
+        const amountMinor = Number(data.amountTotal ?? 0);
+        const amount = Number.isFinite(amountMinor) ? amountMinor / 100 : 0; // INR: paise -> rupees
+
+        ordersThisMonth += 1;
+        revenueThisMonth += amount;
+
+        if (createdAt >= startOfWeek) {
+          ordersThisWeek += 1;
+          revenueThisWeek += amount;
+        }
+
+        if (createdAt >= startOfDay) {
+          ordersToday += 1;
+          revenueToday += amount;
+        }
+      });
+
+      setSalesStats({
+        ordersToday,
+        revenueToday,
+        ordersThisWeek,
+        revenueThisWeek,
+        ordersThisMonth,
+        revenueThisMonth,
+      });
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
     }
   };
 
@@ -174,6 +251,63 @@ const Dashboard = () => {
                 <div className="text-5xl font-bold text-blue-800">₹{inventoryStats.totalValue.toFixed(2)}</div>
                 <div className="p-3 bg-blue-100 rounded-full">
                   <DollarSign className="w-8 h-8 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sales KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-indigo-900">Today</CardTitle>
+              <CardDescription className="text-indigo-700">Orders and revenue today</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-indigo-800">{salesStats.ordersToday} orders</div>
+                  <div className="text-xl font-semibold text-indigo-700">₹{salesStats.revenueToday.toFixed(2)}</div>
+                </div>
+                <div className="p-3 bg-indigo-100 rounded-full">
+                  <CreditCard className="w-8 h-8 text-indigo-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-purple-900">This Week</CardTitle>
+              <CardDescription className="text-purple-700">Orders and revenue this week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-purple-800">{salesStats.ordersThisWeek} orders</div>
+                  <div className="text-xl font-semibold text-purple-700">₹{salesStats.revenueThisWeek.toFixed(2)}</div>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <BarChart className="w-8 h-8 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white">
+            <CardHeader>
+              <CardTitle className="text-rose-900">This Month</CardTitle>
+              <CardDescription className="text-rose-700">Orders and revenue this month</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl font-bold text-rose-800">{salesStats.ordersThisMonth} orders</div>
+                  <div className="text-xl font-semibold text-rose-700">₹{salesStats.revenueThisMonth.toFixed(2)}</div>
+                </div>
+                <div className="p-3 bg-rose-100 rounded-full">
+                  <DollarSign className="w-8 h-8 text-rose-600" />
                 </div>
               </div>
             </CardContent>
