@@ -9,6 +9,7 @@ from firebase_config import db
 payment_bp = Blueprint("payment", __name__)
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 
 def _get_bearer_token():
     header = request.headers.get("Authorization", "")
@@ -273,3 +274,23 @@ def record_sale():
     except Exception as e:
         print("Record sale error:", e)
         return jsonify({"error": str(e)}), 500
+
+@payment_bp.route("/webhook", methods=["POST"])
+def stripe_webhook():
+    if not STRIPE_WEBHOOK_SECRET:
+        return jsonify({"error": "Stripe webhook not configured"}), 500
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get("Stripe-Signature", "")
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
+    except Exception as e:
+        return jsonify({"error": "Invalid webhook"}), 400
+
+    # Scaffold: prefer handling checkout.session.completed here for durability.
+    # Current flow still verifies via /payment/session/<id> on the success page.
+    if event.get("type") == "checkout.session.completed":
+        session = event["data"]["object"]
+        # Intentionally no side-effects yet; to be filled once webhook is enabled in Stripe dashboard.
+        return jsonify({"received": True})
+
+    return jsonify({"received": True})
