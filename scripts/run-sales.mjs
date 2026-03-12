@@ -43,6 +43,7 @@ async function main() {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${TOKEN}`,
+        "X-Emulator-Uid": UID,
       },
       body: JSON.stringify({
         // user_id is ignored by backend now, but we keep it to be explicit.

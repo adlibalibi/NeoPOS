@@ -21,6 +21,11 @@ def _require_uid():
     token = _get_bearer_token()
     if not token:
         return None, (jsonify({"error": "Missing Authorization bearer token"}), 401)
+    # Firebase Admin SDK v5 does not reliably verify Auth emulator tokens.
+    # For local benchmarking with emulators, allow the caller to pass the uid explicitly.
+    emulator_uid = request.headers.get("X-Emulator-Uid")
+    if os.environ.get("FIREBASE_AUTH_EMULATOR_HOST") and emulator_uid:
+        return emulator_uid, None
     try:
         decoded = auth.verify_id_token(token)
         uid = decoded.get("uid")
