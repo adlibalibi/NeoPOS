@@ -13,6 +13,7 @@ import PaymentFailed from "./pages/PaymentFailed";
 import Inventory from "./pages/Inventory";
 import UserProfile from "./pages/UserProfile"
 import Signup from "./pages/Signup";
+import Transactions from "./pages/Transactions";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,14 @@ const App = () => (
           <Route path="/failed" element={<PaymentFailed />} />
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/checkout" element={<Checkout />} />
+          <Route 
+            path="/transactions" 
+            element={
+              <ProtectedRoute>
+                <Transactions />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/profile" element={<UserProfile />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<NotFound />} />

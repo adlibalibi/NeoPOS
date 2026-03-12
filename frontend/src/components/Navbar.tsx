@@ -43,6 +43,13 @@ const Navbar = () => {
                 </Button>
                 <Button
                   variant="ghost"
+                  onClick={() => navigate('/transactions')}
+                  className="text-gray-600 hover:text-primary"
+                >
+                  Transactions
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={() => navigate('/profile')}
                   className="text-gray-600 hover:text-primary"
                 >
