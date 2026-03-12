@@ -2,6 +2,7 @@ import stripe
 from flask import Blueprint, request, jsonify
 import traceback
 import os
+from firebase_admin import firestore
 
 from firebase_config import db
 payment_bp = Blueprint("payment", __name__)
@@ -89,7 +90,26 @@ def get_session(session_id):
             "stock": current_stock - quantity
         })
 
-        return jsonify({"message": "Stock updated successfully"})
+        transaction_ref = db.collection("users").document(user_id).collection("transactions").document()
+        unit_price = float(item_data.get("price", 0))
+        transaction_ref.set({
+            "provider": "stripe",
+            "stripeSessionId": session_id,
+            "paymentStatus": session.payment_status,
+            "currency": session.currency,
+            "amountSubtotal": session.amount_subtotal,
+            "amountTotal": session.amount_total,
+            "items": [{
+                "itemId": item_id,
+                "name": item_data.get("name"),
+                "quantity": quantity,
+                "unitPrice": unit_price,
+                "lineTotal": unit_price * quantity,
+            }],
+            "createdAt": firestore.SERVER_TIMESTAMP,
+        })
+
+        return jsonify({"message": "Stock updated successfully", "transactionId": transaction_ref.id})
     except Exception as e:
         print("Session retrieval error:", e)
         return jsonify({"error": str(e)}), 500
