@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function role(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data.role;
+    }
+
+    function isAdmin(uid) {
+      return isOwner(uid) && role(uid) == "admin";
+    }
+
+    function isStaff(uid) {
+      return isOwner(uid) && (role(uid) == "admin" || role(uid) == "staff");
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      // Allow user to create their profile doc, but role must be 'customer' if set.
+      allow create: if isOwner(uid) && (!('role' in request.resource.data) || request.resource.data.role == "customer");
+
+      // Allow updating own profile, but prevent non-admin role changes.
+      allow update: if isOwner(uid) && (
+        !(request.resource.data.role is string) ||
+        request.resource.data.role == resource.data.role ||
+        isAdmin(uid)
+      );
+
+      allow delete: if false;
+
+      match /inventory/{itemId} {
+        allow read: if isOwner(uid);
+        allow create, update, delete: if isStaff(uid);
+      }
+
+      match /transactions/{txId} {
+        allow read: if isOwner(uid);
+        // Client should not write transactions; backend Admin SDK bypasses rules.
+        allow create, update, delete: if false;
+      }
+
+      match /customers/{customerId} {
+        allow read: if isOwner(uid);
+        allow create, update, delete: if isStaff(uid);
+      }
+    }
+  }
+}
+
