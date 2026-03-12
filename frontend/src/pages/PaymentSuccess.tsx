@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { Loader2 } from 'lucide-react'; // Spinner icon
+import { API_BASE_URL } from "@/lib/apiBase";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const PaymentSuccess = () => {
       }
       
       try {
-        const res = await fetch(`https://neopos-1.onrender.com/payment/session/${sessionId}`);
+        const res = await fetch(`${API_BASE_URL}/payment/session/${sessionId}`);
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || 'Payment verification failed');

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import { auth, db } from "@/firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { API_BASE_URL } from "@/lib/apiBase";
 
 type InventoryItem = {
   id: string;
@@ -83,7 +84,7 @@ const Checkout = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     if (paymentMethod === "card") {
-      const res = await fetch("https://neopos-1.onrender.com/payment/create-checkout-session", {
+      const res = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,7 +97,7 @@ const Checkout = () => {
       return;
     }
 
-    const res = await fetch("https://neopos-1.onrender.com/payment/record-sale", {
+    const res = await fetch(`${API_BASE_URL}/payment/record-sale`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

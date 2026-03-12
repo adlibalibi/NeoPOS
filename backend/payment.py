@@ -8,6 +8,7 @@ import json
 from firebase_config import db
 payment_bp = Blueprint("payment", __name__)
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
 
 @payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
@@ -65,8 +66,8 @@ def create_checkout_session():
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
-            success_url="https://neopos.netlify.app/success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="https://neopos.netlify.app/failed",
+            success_url=f"{FRONTEND_BASE_URL}/success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{FRONTEND_BASE_URL}/failed",
             metadata={
                 "user_id": user_id,
                 "items": json.dumps(canonical_items),

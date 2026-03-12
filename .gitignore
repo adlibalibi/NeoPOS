@@ -39,6 +39,7 @@ Thumbs.db
 # Environment
 .env
 .env.*
+!.env.example
 
 # Production builds
 build/
