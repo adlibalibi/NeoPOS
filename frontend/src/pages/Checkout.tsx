@@ -23,6 +23,7 @@ const Checkout = () => {
   const [selectedItemId, setSelectedItemId] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash" | "upi">("card");
 
   const selectedItem = inventory.find(item => item.id === selectedItemId);
 
@@ -81,16 +82,35 @@ const Checkout = () => {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    const res = await fetch("https://neopos-1.onrender.com/payment/create-checkout-session", {
+    if (paymentMethod === "card") {
+      const res = await fetch("https://neopos-1.onrender.com/payment/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: auth.currentUser?.uid,
+          items: cart.map((l) => ({ item_id: l.itemId, quantity: l.quantity })),
+        }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      return;
+    }
+
+    const res = await fetch("https://neopos-1.onrender.com/payment/record-sale", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: auth.currentUser?.uid,
+        payment_method: paymentMethod,
         items: cart.map((l) => ({ item_id: l.itemId, quantity: l.quantity })),
       }),
     });
     const data = await res.json();
-    if (data.url) window.location.href = data.url;
+    if (res.ok) {
+      window.location.href = "/success";
+    } else {
+      alert(data.error || "Failed to record sale");
+    }
   };
 
   return (
@@ -174,6 +194,22 @@ const Checkout = () => {
             )}
           </div>
 
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Payment method</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as "card" | "cash" | "upi")}
+              className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            >
+              <option value="card">Card (Stripe)</option>
+              <option value="cash">Cash</option>
+              <option value="upi">UPI (manual record)</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              Cash/UPI will be recorded as paid immediately (no Stripe checkout).
+            </p>
+          </div>
+
           <button
             onClick={handleCheckout}
             className={`w-full py-3 text-white text-lg font-semibold rounded-xl transition ${
@@ -183,7 +219,7 @@ const Checkout = () => {
             }`}
             disabled={cart.length === 0}
           >
-            Pay ₹{cartTotal.toFixed(2)}
+            {paymentMethod === "card" ? "Pay" : "Record Sale"} ₹{cartTotal.toFixed(2)}
           </button>
         </div>
       </div>

@@ -162,3 +162,66 @@ def get_session(session_id):
     except Exception as e:
         print("Session retrieval error:", e)
         return jsonify({"error": str(e)}), 500
+
+@payment_bp.route("/record-sale", methods=["POST"])
+def record_sale():
+    try:
+        data = request.get_json()
+        user_id = data.get("user_id")
+        items = data.get("items")
+        payment_method = data.get("payment_method", "cash")
+
+        if not user_id or not items or not isinstance(items, list):
+            return jsonify({"error": "Missing user_id or items"}), 400
+
+        tx_items = []
+        total = 0.0
+
+        for entry in items:
+            item_id = entry.get("item_id") if isinstance(entry, dict) else None
+            quantity = int(entry.get("quantity", 1)) if isinstance(entry, dict) else 1
+            if not item_id:
+                return jsonify({"error": "Missing item_id in items"}), 400
+            if quantity <= 0:
+                return jsonify({"error": "Quantity must be positive"}), 400
+
+            item_ref = db.collection("users").document(user_id).collection("inventory").document(item_id)
+            item_doc = item_ref.get()
+            if not item_doc.exists:
+                return jsonify({"error": f"Item not found: {item_id}"}), 404
+
+            item_data = item_doc.to_dict()
+            current_stock = int(item_data.get("stock", 0))
+            if current_stock < quantity:
+                return jsonify({"error": f"Insufficient stock for item: {item_data.get('name')}"}), 400
+
+            item_ref.update({
+                "stock": current_stock - quantity
+            })
+
+            unit_price = float(item_data.get("price", 0))
+            line_total = unit_price * quantity
+            total += line_total
+            tx_items.append({
+                "itemId": item_id,
+                "name": item_data.get("name"),
+                "quantity": quantity,
+                "unitPrice": unit_price,
+                "lineTotal": line_total,
+            })
+
+        transaction_ref = db.collection("users").document(user_id).collection("transactions").document()
+        transaction_ref.set({
+            "provider": "manual",
+            "paymentMethod": payment_method,
+            "paymentStatus": "paid",
+            "currency": "inr",
+            "amountTotal": int(round(total * 100)),
+            "items": tx_items,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+        })
+
+        return jsonify({"message": "Sale recorded", "transactionId": transaction_ref.id})
+    except Exception as e:
+        print("Record sale error:", e)
+        return jsonify({"error": str(e)}), 500
