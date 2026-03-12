@@ -30,7 +30,8 @@ async function main() {
   }
 
   const token = await auth.currentUser.getIdToken();
-  process.stdout.write(token);
+  const uid = auth.currentUser.uid;
+  process.stdout.write(JSON.stringify({ uid, token }));
 }
 
 main().catch((e) => {
