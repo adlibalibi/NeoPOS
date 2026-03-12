@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import { auth, db } from "@/firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { API_BASE_URL } from "@/lib/apiBase";
+import { getIdTokenHeader } from "@/lib/authToken";
 
 type InventoryItem = {
   id: string;
@@ -84,11 +85,11 @@ const Checkout = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     if (paymentMethod === "card") {
+      const authHeader = await getIdTokenHeader();
       const res = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeader },
         body: JSON.stringify({
-          user_id: auth.currentUser?.uid,
           items: cart.map((l) => ({ item_id: l.itemId, quantity: l.quantity })),
         }),
       });
@@ -97,11 +98,11 @@ const Checkout = () => {
       return;
     }
 
+    const authHeader = await getIdTokenHeader();
     const res = await fetch(`${API_BASE_URL}/payment/record-sale`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeader },
       body: JSON.stringify({
-        user_id: auth.currentUser?.uid,
         payment_method: paymentMethod,
         items: cart.map((l) => ({ item_id: l.itemId, quantity: l.quantity })),
       }),

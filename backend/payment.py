@@ -2,7 +2,7 @@ import stripe
 from flask import Blueprint, request, jsonify
 import traceback
 import os
-from firebase_admin import firestore
+from firebase_admin import firestore, auth
 import json
 
 from firebase_config import db
@@ -10,11 +10,44 @@ payment_bp = Blueprint("payment", __name__)
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL", "http://localhost:5173").rstrip("/")
 
+def _get_bearer_token():
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        return None
+    return header.split("Bearer ", 1)[1].strip()
+
+def _require_uid():
+    token = _get_bearer_token()
+    if not token:
+        return None, (jsonify({"error": "Missing Authorization bearer token"}), 401)
+    try:
+        decoded = auth.verify_id_token(token)
+        uid = decoded.get("uid")
+        if not uid:
+            return None, (jsonify({"error": "Invalid token"}), 401)
+        return uid, None
+    except Exception:
+        return None, (jsonify({"error": "Invalid token"}), 401)
+
+def _require_staff(uid):
+    user_doc = db.collection("users").document(uid).get()
+    role = (user_doc.to_dict() or {}).get("role")
+    if role not in ("admin", "staff"):
+        return (jsonify({"error": "Forbidden"}), 403)
+    return None
+
 @payment_bp.route("/create-checkout-session", methods=["POST"])
 def create_checkout_session():
     try:
+        uid, err = _require_uid()
+        if err:
+            return err
+        forbidden = _require_staff(uid)
+        if forbidden:
+            return forbidden
+
         data = request.get_json()
-        user_id = data.get("user_id")
+        user_id = uid
         items = data.get("items")
 
         # Backward-compat: allow single-item payload
@@ -81,6 +114,10 @@ def create_checkout_session():
 @payment_bp.route("/session/<session_id>", methods=["GET"])
 def get_session(session_id):
     try:
+        uid, err = _require_uid()
+        if err:
+            return err
+
         session = stripe.checkout.Session.retrieve(session_id)
 
         if session.payment_status != 'paid':
@@ -93,6 +130,9 @@ def get_session(session_id):
 
         if not user_id:
             return jsonify({"error": "Missing metadata"}), 400
+
+        if user_id != uid:
+            return jsonify({"error": "Forbidden"}), 403
 
         existing = db.collection("users").document(user_id).collection("transactions").where("stripeSessionId", "==", session_id).limit(1).get()
         if existing:
@@ -167,8 +207,15 @@ def get_session(session_id):
 @payment_bp.route("/record-sale", methods=["POST"])
 def record_sale():
     try:
+        uid, err = _require_uid()
+        if err:
+            return err
+        forbidden = _require_staff(uid)
+        if forbidden:
+            return forbidden
+
         data = request.get_json()
-        user_id = data.get("user_id")
+        user_id = uid
         items = data.get("items")
         payment_method = data.get("payment_method", "cash")
 

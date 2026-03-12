@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import { Loader2 } from 'lucide-react'; // Spinner icon
 import { API_BASE_URL } from "@/lib/apiBase";
+import { getIdTokenHeader } from "@/lib/authToken";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
@@ -22,7 +23,10 @@ const PaymentSuccess = () => {
       }
       
       try {
-        const res = await fetch(`${API_BASE_URL}/payment/session/${sessionId}`);
+        const authHeader = await getIdTokenHeader();
+        const res = await fetch(`${API_BASE_URL}/payment/session/${sessionId}`, {
+          headers: authHeader,
+        });
         const data = await res.json();
         if (!res.ok) {
           throw new Error(data.error || 'Payment verification failed');
