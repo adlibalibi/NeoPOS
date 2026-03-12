@@ -14,11 +14,13 @@ import Inventory from "./pages/Inventory";
 import UserProfile from "./pages/UserProfile"
 import Signup from "./pages/Signup";
 import Transactions from "./pages/Transactions";
+import { useAuth } from "@/auth/AuthContext";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = localStorage.getItem('token');
+  const { loading, isAuthenticated } = useAuth();
+  if (loading) return null;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -29,8 +31,8 @@ const RoleRoute = ({
   children: React.ReactNode;
   allow: Array<"admin" | "staff" | "customer">;
 }) => {
-  const raw = localStorage.getItem("user");
-  const role = raw ? (JSON.parse(raw)?.role as string | undefined) : undefined;
+  const { loading, role } = useAuth();
+  if (loading) return null;
   if (!role || !allow.includes(role as any)) return <Navigate to="/dashboard" />;
   return <>{children}</>;
 };

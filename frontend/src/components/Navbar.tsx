@@ -2,12 +2,11 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { ShoppingCart } from "lucide-react";
+import { useAuth } from "@/auth/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const isLoggedIn = localStorage.getItem('token');
-  const rawUser = localStorage.getItem("user");
-  const role = rawUser ? (JSON.parse(rawUser)?.role as string | undefined) : undefined;
+  const { loading, isAuthenticated, role } = useAuth();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -28,7 +27,7 @@ const Navbar = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            {isLoggedIn ? (
+            {!loading && isAuthenticated ? (
               <>
                 {(role === "admin" || role === "staff") && (
                   <>
